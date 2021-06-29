@@ -1,23 +1,8 @@
-FROM node:12-alpine
+FROM node:12-buster
 
 WORKDIR /app
 
 COPY . /app/
-
-# Screw Gatsby
-RUN apk update
-RUN apk upgrade
-# RUN apk add bash
-RUN apk add build-base
-# RUN apk add nasm
-# RUN apk add autoconf
-# RUN apk add automake
-# RUN apk add libtool
-# RUN apk add dpkg
-# RUN apk add pkgconfig
-# RUN apk add libpng
-# RUN apk add libpng-dev
-# RUN apk add g++
 
 # Install all dependencies
 RUN yarn install

@@ -678,7 +678,7 @@ const GetEarlyAccess = () => {
     <div id={EMAIL_SIGNUP_SECTION_ID}>
       <SectionTitle>Start learning right now</SectionTitle>
       <Typography style={{ marginBottom: 20 }}>
-        You're one click away from writing your first code.
+        You're one click away from writing your first lines of code.
       </Typography>
       <StartNowButton label="Start Coding" />
     </div>

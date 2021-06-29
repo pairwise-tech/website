@@ -11,8 +11,8 @@ env:
   CI: true
   RUN_REGION: us-central1
   GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-  SLACK_STATUS_BOT_ACCESS_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
   GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+  SLACK_STATUS_BOT_ACCESS_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
 
 jobs:
   build-and-test:
@@ -20,26 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses:
-          actions/checkout@v2
+        uses: actions/checkout@v2
 
-          # Setup NodeJS
+      # Setup NodeJS
       - name: Setup NodeJS
         uses: actions/setup-node@v1
         with:
           node-version: 12.x
 
-      # Run install and build steps
+      # Build project
       - name: Install Dependencies
-        run: yarn
-
-      # Build the code
-      - name: Build the Project
-        run: yarn build
-
-      # Run checks
-      - name: Run Project Checks
-        run: yarn test
+        run: yarn ci:build
 
       # Send Slack notification if workflow fails
       - name: Notify Slack on workflow failure
@@ -77,7 +68,7 @@ jobs:
       - name: Build the pairwise.tech static site
         run: |
           docker run \
-            --rm -v "$PWD/packages/www/public:/usr/app/packages/www/public" docker.pkg.github.com/pairwise-tech/pairwise/pairwise-dependencies:latest /bin/bash -c 'yarn www:build'
+            --rm -v "$PWD/packages/www/public:/usr/app/packages/www/public" docker.pkg.github.com/pairwise-tech/website/pairwise-website:latest /bin/bash -c 'yarn build'
 
       # Setup gcloud CLI to use gsutil
       - name: Setup gcloud CLI
@@ -88,7 +79,7 @@ jobs:
 
       # Deploy the static site to Cloud Storage
       - name: Deploy pairwise.tech static site
-        run: gsutil -m rsync -r packages/www/public gs://www.pairwise.tech
+        run: gsutil -m rsync -r public gs://www.pairwise.tech
 
       # Send Slack notification
       # (docs: https://github.com/voxmedia/github-action-slack-notify-build)

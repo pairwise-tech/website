@@ -15,8 +15,8 @@ env:
   SLACK_STATUS_BOT_ACCESS_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  deploy-website:
+    name: Website
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -31,26 +31,6 @@ jobs:
       # Build project
       - name: Install Dependencies
         run: yarn ci:build
-
-      # Send Slack notification if workflow fails
-      - name: Notify Slack on workflow failure
-        if: failure()
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
-        uses: voxmedia/github-action-slack-notify-build@v1
-        with:
-          color: danger
-          status: FAILED
-          channel_id: CTBG8AT0B
-
-  website-deploy:
-    name: Website Deploy
-    needs: build-and-test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v2
 
       # Install dependencies, if any package.json or lock files have changed
       - name: Login to GitHub Packages Docker Registry

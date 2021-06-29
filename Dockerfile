@@ -4,9 +4,8 @@ WORKDIR /app
 
 COPY . /app/
 
-# Get Ubuntu packages
-RUN apk update
-RUN apk upgrade
+RUN apk add autoconf
+RUN apk add automake
 
 # Install all dependencies
 RUN yarn install

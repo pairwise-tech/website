@@ -4,7 +4,9 @@ WORKDIR /app
 
 COPY . /app/
 
-RUN apk add --no-cache autoconf
+# Get Ubuntu packages
+RUN apk update
+RUN apk upgrade
 
 # Install all dependencies
 RUN yarn install

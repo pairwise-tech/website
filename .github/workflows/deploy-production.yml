@@ -16,7 +16,7 @@ env:
 
 jobs:
   deploy-website:
-    name: Website
+    name: Deploy Website
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -48,7 +48,7 @@ jobs:
       - name: Build the pairwise.tech static site
         run: |
           docker run \
-            --rm -v "$PWD/packages/www/public:/usr/app/packages/www/public" docker.pkg.github.com/pairwise-tech/website/pairwise-website:latest /bin/bash -c 'yarn build'
+            --rm -v "$PWD/public:/usr/app/public" pairwise-website:latest /bin/bash -c 'yarn build'
 
       # Setup gcloud CLI to use gsutil
       - name: Setup gcloud CLI

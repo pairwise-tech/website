@@ -1,0 +1,114 @@
+name: Deploy Website
+
+# Only deploy on commits to the main branch
+on:
+  push:
+    branches:
+      - main
+
+# Environment variables available to all jobs and steps in this workflow
+env:
+  CI: true
+  RUN_REGION: us-central1
+  GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+  SLACK_STATUS_BOT_ACCESS_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses:
+          actions/checkout@v2
+
+          # Setup NodeJS
+      - name: Setup NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 12.x
+
+      # Run install and build steps
+      - name: Install Dependencies
+        run: yarn
+
+      # Build the code
+      - name: Build the Project
+        run: yarn build
+
+      # Run checks
+      - name: Run Project Checks
+        run: yarn test
+
+      # Send Slack notification if workflow fails
+      - name: Notify Slack on workflow failure
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1
+        with:
+          color: danger
+          status: FAILED
+          channel_id: CTBG8AT0B
+
+  website-deploy:
+    name: Website Deploy
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      # Install dependencies, if any package.json or lock files have changed
+      - name: Login to GitHub Packages Docker Registry
+        uses: docker/login-action@v1
+        with:
+          registry: docker.pkg.github.com
+          username: bonham000
+          password: '${{ secrets.GITHUB_TOKEN }}'
+
+      # NOTE: We need the static files to be available to the host environment,
+      # thus the use of volumes here. This is because we want to use the
+      # authenticated and authorized gsutil to deploy the site, and if we
+      # dropped gsutil into the docker container we would have to auth another
+      # way
+      - name: Build the pairwise.tech static site
+        run: |
+          docker run \
+            --rm -v "$PWD/packages/www/public:/usr/app/packages/www/public" docker.pkg.github.com/pairwise-tech/pairwise/pairwise-dependencies:latest /bin/bash -c 'yarn www:build'
+
+      # Setup gcloud CLI to use gsutil
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          service_account_email: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
+
+      # Deploy the static site to Cloud Storage
+      - name: Deploy pairwise.tech static site
+        run: gsutil -m rsync -r packages/www/public gs://www.pairwise.tech
+
+      # Send Slack notification
+      # (docs: https://github.com/voxmedia/github-action-slack-notify-build)
+      - name: Notify Slack on workflow success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1
+        with:
+          channel_id: CTBG8AT0B
+          status: SUCCESS
+          color: good
+
+      # Send Slack notification if workflow fails
+      - name: Notify Slack on workflow failure
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_STATUS_BOT_ACCESS_TOKEN }}
+        uses: voxmedia/github-action-slack-notify-build@v1
+        with:
+          color: danger
+          status: FAILED
+          channel_id: CTBG8AT0B

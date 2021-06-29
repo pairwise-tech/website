@@ -2,6 +2,8 @@ FROM node:12-alpine
 
 WORKDIR /app
 
+COPY . /app/
+
 # Install all dependencies
 RUN yarn install
 

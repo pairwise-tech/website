@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY . /app/
 
+RUN apk add nasm
 RUN apk add autoconf
 RUN apk add automake
 

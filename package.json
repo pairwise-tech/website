@@ -23,7 +23,7 @@
     "start:prod": "gatsby serve",
     "serve": "yarn run start:prod",
     "test": "yarn lint && echo \"Write tests! -> https://gatsby.dev/unit-testing\"",
-    "ci:build": "docker build -t pairwise-website .",
+    "deploy": "yarn test && yarn build",
     "codegen": "graphql-codegen --config graphql-codegen.yml"
   },
   "dependencies": {
